@@ -10,13 +10,13 @@ class LoadDimensionOperator(BaseOperator):
     def __init__(self,
                  redshift_conn_id='redshift',
                  table='',
-                 select_sql='',
+                 insert_sql='',
                  mode='truncate',
                  *args, **kwargs):
         super(LoadDimensionOperator, self).__init__(*args, **kwargs)
         self.redshift_conn_id = redshift_conn_id
         self.table = table
-        self.select_sql = select_sql
+        self.insert_sql = insert_sql
         self.mode = mode
 
     def execute(self, context):
@@ -24,13 +24,13 @@ class LoadDimensionOperator(BaseOperator):
 
         if self.mode == 'truncate':
             self.log.info(f'Deleting data from {self.table} dimension table...')
-            redshift_hook.run(f'DELETE FROM {self.table};')
+            redshift_hook.run(f'TRUNCATE TABLE {self.table};')
             self.log.info("Deleting complete.")
 
         sql = """
             INSERT INTO {table}
-            {select_sql};
-        """.format(table=self.table, select_sql=self.select_sql)
+            {insert_sql};
+        """.format(table=self.table, select_sql=self.insert_sql)
 
         self.log.info(f'Loading data into {self.table} dimension table...')
         redshift_hook.run(sql)
